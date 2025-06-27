@@ -159,3 +159,14 @@ class State(InputState):
 
     # Feel free to add additional attributes to your state as needed.
     # Common examples include retrieved documents, extracted entities, API connections, etc.
+
+    classification: Optional[str] = field(default=None)
+    """Stores the classified subject area (science/history/literature/general)"""
+    agent_responses: dict[str, str] = field(default_factory=dict)
+    """Stores the responses from each subject agent."""
+    critique_result: Optional[str] = field(default=None)
+    """Stores the critique result from the agent's self-evaluation."""
+    needs_additional_retrieval: bool = field(default=False)
+    """Indicates whether the agent needs to perform additional retrieval steps."""
+    web_search_results: list[Document] = field(default_factory=list)
+    """Stores the results from web searches performed by the agent."""
