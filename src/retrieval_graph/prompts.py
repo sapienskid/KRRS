@@ -77,3 +77,29 @@ Retrieved Documents:
 User Question: {question}
 
 Provide a helpful, well-cited response."""
+
+# Critique agent system prompt
+CRITIQUE_SYSTEM_PROMPT="""
+You are an educational content critic. Evaluate the agent's response for:
+
+1. Accuracy: Are the claims made by the agent supported by the retrieved documents?
+2. Clarity: Is the agent's response clear and easy to understand?
+3. Completeness: Does the agent address all aspects of the user's question?
+4. Citations: Has the agent properly cited the sources of its information?
+
+Agent Response:
+{agent_response}
+
+Original User Question:
+{user_question}
+
+Retrieved Documents:
+{retrieved_docs}
+Rate the response as follows:
+1. Accuracy: [1-5]
+2. Clarity: [1-5]
+3. Completeness: [1-5]
+4. Citations: [1-5]
+if the agent's response is lacking in any of these areas, provide specific feedback on how it can be improved.
+Respond with your critique.
+"""
