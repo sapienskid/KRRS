@@ -23,14 +23,10 @@ def make_text_encoder(model: str) -> Embeddings:
     """Connect to the configured text encoder."""
     provider, model = model.split("/", maxsplit=1)
     match provider:
-        case "openai":
-            from langchain_openai import OpenAIEmbeddings
+        case "google":
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-            return OpenAIEmbeddings(model=model)
-        case "cohere":
-            from langchain_cohere import CohereEmbeddings
-
-            return CohereEmbeddings(model=model)  # type: ignore
+            return GoogleGenerativeAIEmbeddings(model=model)
         case _:
             raise ValueError(f"Unsupported embedding provider: {provider}")
 

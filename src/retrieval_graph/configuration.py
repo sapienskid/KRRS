@@ -25,7 +25,7 @@ class IndexConfiguration:
         str,
         {"__template_metadata__": {"kind": "embeddings"}},
     ] = field(
-        default="openai/text-embedding-3-small",
+        default="google/text-embedding--005",
         metadata={
             "description": "Name of the embedding model to use. Must be a valid embedding model name."
         },
