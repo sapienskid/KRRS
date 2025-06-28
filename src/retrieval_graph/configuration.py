@@ -39,7 +39,7 @@ class IndexConfiguration:
         str,
         {"__template_metadata__": {"kind": "embeddings"}},
     ] = field(
-        default="google/text-embedding--005",
+        default="google/text-embedding-004",
         metadata={
             "description": "Name of the embedding model to use. Must be a valid embedding model name."
         },
@@ -66,6 +66,26 @@ class IndexConfiguration:
         """Validate configuration after initialization."""
         if not self.user_id or self.user_id == "default_user":
             raise ValueError("Please provide a valid user_id in the configuration.")
+        
+        # Ensure embedding_model is not None or empty
+        if not self.embedding_model:
+            self.embedding_model = "google/text-embedding-004"
+        
+        # Fix Google embedding model names to the correct format
+        if self.embedding_model:
+            if self.embedding_model.startswith("google/") and not self.embedding_model.startswith("google/models/"):
+                if "text-embedding-005" in self.embedding_model:
+                    # text-embedding-005 is not available, use text-embedding-004 instead
+                    self.embedding_model = "google/models/text-embedding-004"
+                elif "text-embedding-004" in self.embedding_model:
+                    self.embedding_model = "google/models/text-embedding-004"
+                else:
+                    # For other Google models, add the models/ prefix
+                    model_name = self.embedding_model.split("/", 1)[1]
+                    self.embedding_model = f"google/models/{model_name}"
+            elif "/" not in self.embedding_model:
+                # If no provider specified, assume it's a Google model and add the proper prefix
+                self.embedding_model = f"google/models/{self.embedding_model}"
 
     @classmethod
     def from_runnable_config(

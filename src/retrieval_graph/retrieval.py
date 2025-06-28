@@ -21,12 +21,22 @@ from retrieval_graph.configuration import Configuration, IndexConfiguration
 
 def make_text_encoder(model: str) -> Embeddings:
     """Connect to the configured text encoder."""
-    provider, model = model.split("/", maxsplit=1)
+    if not model:
+        raise ValueError("Embedding model cannot be empty or None")
+    
+    # Handle cases where model string doesn't contain a provider prefix
+    if "/" not in model:
+        # Default to google provider for models without a provider prefix
+        provider = "google"
+        model_name = model
+    else:
+        provider, model_name = model.split("/", maxsplit=1)
+    
     match provider:
         case "google":
             from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-            return GoogleGenerativeAIEmbeddings(model=model)
+            return GoogleGenerativeAIEmbeddings(model=model_name)
         case _:
             raise ValueError(f"Unsupported embedding provider: {provider}")
 
