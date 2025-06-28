@@ -8,6 +8,7 @@ from typing import Annotated, Any, Literal, Optional, Type, TypeVar
 from langchain_core.runnables import RunnableConfig, ensure_config
 
 from retrieval_graph import prompts
+import os
 
 
 @dataclass(kw_only=True)
@@ -19,7 +20,20 @@ class IndexConfiguration:
     retriever provider choice, and search parameters.
     """
 
-    user_id: str = field(metadata={"description": "Unique identifier for the user."})
+    user_id: str = field(
+        default_factory=lambda: os.getenv("USER_ID", ""),
+        metadata={"description": "Unique identifier for the user."}
+    )
+    
+    elasticsearch_host: str = field(
+        default_factory=lambda: os.getenv("ELASTICSEARCH_HOST", "localhost"),
+        metadata={"description": "Hostname or IP address of the Elasticsearch server."}
+    )
+    
+    elasticsearch_port: int = field(
+        default_factory=lambda: int(os.getenv("ELASTICSEARCH_PORT", "9200")),
+        metadata={"description": "Port number for the Elasticsearch server."}
+    )
 
     embedding_model: Annotated[
         str,
@@ -47,6 +61,11 @@ class IndexConfiguration:
             "description": "Additional keyword arguments to pass to the search function of the retriever."
         },
     )
+
+    def __post_init__(self):
+        """Validate configuration after initialization."""
+        if not self.user_id or self.user_id == "default_user":
+            raise ValueError("Please provide a valid user_id in the configuration.")
 
     @classmethod
     def from_runnable_config(
