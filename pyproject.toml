@@ -9,6 +9,8 @@ license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "langchain-core", 
+    "langchain-community",
     "langgraph",
     "langchain-anthropic",
     "langchain",
@@ -16,8 +18,12 @@ dependencies = [
     "langchain-elasticsearch",
     "msgspec",
     "langchain-google-genai",
-    "langgraph-api"
-
+    "langgraph-api",
+    "aiohttp",
+    "PyPDF2",
+    "beautifulsoup4",
+    "tavily-python",
+    "pydantic"
 ]
 
 [project.optional-dependencies]
