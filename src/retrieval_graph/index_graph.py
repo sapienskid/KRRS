@@ -1,6 +1,6 @@
 """This "graph" simply exposes an endpoint for a user to upload docs to be indexed."""
 
-from typing import Optional, Sequence
+from typing import Sequence
 
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnableConfig
@@ -9,6 +9,7 @@ from langgraph.graph import StateGraph
 from retrieval_graph import retrieval
 from retrieval_graph.configuration import IndexConfiguration
 from retrieval_graph.state import IndexState
+from retrieval_graph.utils import create_documents_from_urls
 
 
 def ensure_docs_have_user_id(
@@ -32,7 +33,7 @@ def ensure_docs_have_user_id(
 
 
 async def index_docs(
-    state: IndexState, *, config: Optional[RunnableConfig] = None
+    state: IndexState, *, config: RunnableConfig | None
 ) -> dict[str, str]:
     """Asynchronously index documents in the given state using the configured retriever.
 
@@ -53,12 +54,46 @@ async def index_docs(
     return {"docs": "delete"}
 
 
+async def index_urls(
+    state: IndexState, *, config: RunnableConfig | None
+) -> dict[str, str]:
+    """Index documents from URLs (PDFs and web pages).
+
+    This function processes URLs to extract content and index the resulting documents.
+
+    Args:
+        state (IndexState): The current state containing URLs to process.
+        config (Optional[RunnableConfig]): Configuration for the indexing process.
+    """
+    if not config:
+        raise ValueError("Configuration required to run index_urls.")
+
+    # Extract URLs from state - assuming they're passed as docs with URL content
+    urls = []
+    for doc in state.docs:
+        if doc.page_content.startswith(("http://", "https://")):
+            urls.append(doc.page_content.strip())
+
+    if urls:
+        # Process URLs to create documents
+        processed_docs = create_documents_from_urls(urls)
+
+        if processed_docs:
+            with retrieval.make_retriever(config) as retriever:
+                stamped_docs = ensure_docs_have_user_id(processed_docs, config)
+                await retriever.aadd_documents(stamped_docs)
+
+    return {"docs": "delete"}
+
+
 # Define a new graph
 
 
 builder = StateGraph(IndexState, config_schema=IndexConfiguration)
-builder.add_node(index_docs)
+builder.add_node("index_docs", index_docs)
+builder.add_node("index_urls", index_urls)
 builder.add_edge("__start__", "index_docs")
+builder.add_edge("index_docs", "index_urls")
 # Finally, we compile it!
 # This compiles it into a graph you can invoke and deploy.
 graph = builder.compile()
