@@ -248,3 +248,28 @@ def create_documents_from_urls(urls: List[str]) -> List[Document]:
     return documents
 
 
+def format_docs_with_citations(docs: Optional[list[Document]]) -> str:
+    """Format documents with enhanced citation information.
+
+    Args:
+        docs (Optional[list[Document]]): Documents to format.
+
+    Returns:
+        str: Formatted documents with citation metadata.
+    """
+    if not docs:
+        return "<documents></documents>"
+
+    formatted = []
+    for i, doc in enumerate(docs, 1):
+        metadata = doc.metadata or {}
+        source = metadata.get("source", f"Document_{i}")
+        title = metadata.get("title", f"Document {i}")
+        doc_type = metadata.get("type", "unknown")
+
+        citation_info = f"title=\"{title}\" source=\"{source}\" type=\"{doc_type}\""
+        formatted.append(f"<document {citation_info}>\n{doc.page_content}\n</document>")
+
+    return f"""<documents>
+{chr(10).join(formatted)}
+</documents>"""
