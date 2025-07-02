@@ -1,727 +1,491 @@
-# LangGraph Retrieval Chat Bot Template
+# Knowledge Retrieval and Reasoning System (KRRS)
 
-[![CI](https://github.com/langchain-ai/retrieval-agent-template/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/langchain-ai/retrieval-agent-template/actions/workflows/unit-tests.yml)
-[![Integration Tests](https://github.com/langchain-ai/retrieval-agent-template/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/langchain-ai/retrieval-agent-template/actions/workflows/integration-tests.yml)
-[![Open in - LangGraph Studio](https://img.shields.io/badge/Open_in-LangGraph_Studio-00324d.svg?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NS4zMzMiIGhlaWdodD0iODUuMzMzIiB2ZXJzaW9uPSIxLjAiIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTEzIDcuOGMtNi4zIDMuMS03LjEgNi4zLTYuOCAyNS43LjQgMjQuNi4zIDI0LjUgMjUuOSAyNC41QzU3LjUgNTggNTggNTcuNSA1OCAzMi4zIDU4IDcuMyA1Ni43IDYgMzIgNmMtMTIuOCAwLTE2LjEuMy0xOSAxLjhtMzcuNiAxNi42YzIuOCAyLjggMy40IDQuMiAzLjQgNy42cy0uNiA0LjgtMy40IDcuNkw0Ny4yIDQzSDE2LjhsLTMuNC0zLjRjLTQuOC00LjgtNC44LTEwLjQgMC0xNS4ybDMuNC0zLjRoMzAuNHoiLz48cGF0aCBkPSJNMTguOSAyNS42Yy0xLjEgMS4zLTEgMS43LjQgMi41LjkuNiAxLjcgMS44IDEuNyAyLjcgMCAxIC43IDIuOCAxLjYgNC4xIDEuNCAxLjkgMS40IDIuNS4zIDMuMi0xIC42LS42LjkgMS40LjkgMS41IDAgMi43LS41IDIuNy0xIDAtLjYgMS4xLS44IDIuNi0uNGwyLjYuNy0xLjgtMi45Yy01LjktOS4zLTkuNC0xMi4zLTExLjUtOS44TTM5IDI2YzAgMS4xLS45IDIuNS0yIDMuMi0yLjQgMS41LTIuNiAzLjQtLjUgNC4yLjguMyAyIDEuNyAyLjUgMy4xLjYgMS41IDEuNCAyLjMgMiAyIDEuNS0uOSAxLjItMy41LS40LTMuNS0yLjEgMC0yLjgtMi44LS44LTMuMyAxLjYtLjQgMS42LS41IDAtLjYtMS4xLS4xLTEuNS0uNi0xLjItMS42LjctMS43IDMuMy0yLjEgMy41LS41LjEuNS4yIDEuNi4zIDIuMiAwIC43LjkgMS40IDEuOSAxLjYgMi4xLjQgMi4zLTIuMy4yLTMuMi0uOC0uMy0yLTEuNy0yLjUtMy4xLTEuMS0zLTMtMy4zLTMtLjUiLz48L3N2Zz4=)](https://langgraph-studio.vercel.app/templates/open?githubUrl=https://github.com/langchain-ai/retrieval-agent-template)
-
-This is a starter project to help you get started with developing a retrieval agent using [LangGraph](https://github.com/langchain-ai/langgraph) in [LangGraph Studio](https://github.com/langchain-ai/langgraph-studio).
+An intelligent Multi-Agent System for Knowledge Retrieval and Reasoning in Education, built with [LangGraph](https://github.com/langchain-ai/langgraph) and designed for [LangGraph Studio](https://github.com/langchain-ai/langgraph-studio).
 
 ![Graph view in LangGraph studio UI](./static/studio_ui.png)
 
-It contains example graphs exported from `src/retrieval_agent/graph.py` that implement a retrieval-based question answering system.
+KRRS implements a sophisticated multi-agent architecture with specialized agents for different academic domains, featuring intelligent query routing, comprehensive retrieval capabilities, and built-in quality assurance through a critique system.
 
 ## What it does
 
-This project has two graphs: an "index" graph, and a "retrieval" graph.
+KRRS is an advanced multi-agent educational system that implements a sophisticated architecture for knowledge retrieval and reasoning. The system consists of:
 
-The index graph takes in document objects and strings, and it indexes them for the configured `user_id`.
+### Core Architecture
 
-```json
-[{ "page_content": "I have 1 cat." }]
+**Two Main Graphs:**
+1. **Index Graph**: Processes and indexes educational documents for efficient retrieval
+2. **Retrieval Graph**: Multi-agent system that provides intelligent responses to educational queries
+
+### Multi-Agent Retrieval System
+
+The retrieval graph implements a specialized multi-agent architecture:
+
+```
+User Query → Query Classification → Specialist Agent → Tools → Critique Agent → Response
 ```
 
-The retrieval chat bot manages a chat history and responds based on fetched context. It:
+**Specialist Agents:**
+- **Science Agent**: Expert in natural sciences, mathematics, engineering, and technology
+- **History Agent**: Specialist in historical events, figures, and analysis
+- **Literature Agent**: Expert in literary works, criticism, and analysis  
+- **General Agent**: Handles interdisciplinary and general knowledge topics
 
-1. Takes a user **query** as input
-2. Searches for documents in filtered by user_id based on the conversation history
-3. Responds using the retrieved information and conversation context
+**Intelligent Features:**
+- **Query Classification**: Automatically routes queries to the most appropriate specialist agent
+- **Hybrid Retrieval**: Combines local knowledge base search with web search capabilities
+- **Quality Assurance**: Built-in critique agent that evaluates responses and triggers improvements
+- **Tool Integration**: Each agent can use retrieval and web search tools as needed
 
-By default, it's set up to answer questions based on the user's indexed documents, which are filtered by the user's ID for personalized responses.
+### How It Works
+
+1. **Query Processing**: User input is classified into subject domains (science, history, literature, or general)
+2. **Specialist Routing**: Query is routed to the appropriate specialist agent
+3. **Knowledge Retrieval**: Agent searches local knowledge base and/or web for relevant information
+4. **Response Generation**: Agent synthesizes information into comprehensive, educational responses
+5. **Quality Control**: Critique agent evaluates response quality and may trigger retry if needed
+6. **Final Response**: High-quality, subject-specific answer delivered to user
+
+The system is designed for educational contexts, providing personalized, accurate, and pedagogically sound responses while maintaining conversation history and context awareness.
 
 ## Getting Started
 
-Assuming you have already [installed LangGraph Studio](https://github.com/langchain-ai/langgraph-studio?tab=readme-ov-file#download), to set up:
+Assuming you have already [installed LangGraph Studio](https://github.com/langchain-ai/langgraph-studio?tab=readme-ov-file#download), follow these steps to set up KRRS:
 
-1. Create a `.env` file.
+1. **Create Environment File**
 
 ```bash
 cp .env.example .env
 ```
 
-2. Select your retriever & index, and save the access instructions to your `.env` file.
+2. **Configure Your Setup**: Select your preferred retriever, models, and API keys. Add them to your `.env` file following the instructions below.
 
-<!--
-Setup instruction auto-generated by `langgraph template lock`. DO NOT EDIT MANUALLY.
--->
+### Required Configuration
+
+KRRS requires configuration for:
+- **Retriever Provider**: For document indexing and retrieval (Elasticsearch recommended)
+- **Language Models**: For specialist agents and query processing
+- **Embedding Model**: For document vectorization
+- **Optional**: Web search capabilities for enhanced retrieval
 
 ### Setup Retriever
 
-The defaults values for `retriever_provider` are shown below:
+KRRS currently supports Elasticsearch as the primary retriever provider, with a focus on local deployment for educational institutions.
 
+**Default Configuration:**
 ```yaml
-retriever_provider: elastic
+retriever_provider: elastic-local
 ```
 
-Follow the instructions below to get set up, or pick one of the additional options.
+#### Elasticsearch (Local Setup)
 
-#### Elasticsearch
+For educational environments, we recommend a local Elasticsearch setup that's optimized for development and classroom use.
 
-Elasticsearch (as provided by Elastic) is an open source distributed search and analytics engine, scalable data store and vector database optimized for speed and relevance on production-scale workloads.
+##### Quick Setup with Docker
 
-##### Setup Elasticsearch
-Elasticsearch can be configured as the knowledge base provider for a retrieval agent by being deployed on Elastic Cloud (either as a hosted deployment or serverless project) or on your local environment.
-
-**Elasticsearch Serverless**
-
-1. Signup for a free 14 day trial with [Elasticsearch Serverless](https://cloud.elastic.co/registration?onboarding_token=search&cta=cloud-registration&tech=trial&plcmt=article%20content&pg=langchain).
-2. Get the Elasticsearch URL, found on home under "Copy your connection details".
-3. Create an API key found on home under "API Key".
-4. Copy the URL and API key to your `.env` file created above:
-
-```
-ELASTICSEARCH_URL=<ES_URL>
-ELASTICSEARCH_API_KEY=<API_KEY>
-```
-
-**Elastic Cloud**
-
-1. Signup for a free 14 day trial with [Elastic Cloud](https://cloud.elastic.co/registration?onboarding_token=search&cta=cloud-registration&tech=trial&plcmt=article%20content&pg=langchain).
-2. Get the Elasticsearch URL, found under Applications of your deployment.
-3. Create an API key. See the [official elastic documentation](https://www.elastic.co/search-labs/tutorials/install-elasticsearch/elastic-cloud#creating-an-api-key) for more information.
-4. Copy the URL and API key to your `.env` file created above:
-
-```
-ELASTICSEARCH_URL=<ES_URL>
-ELASTICSEARCH_API_KEY=<API_KEY>
-```
-**Local Elasticsearch (Docker)**
-
-```
-docker run -p 127.0.0.1:9200:9200 -d --name elasticsearch --network elastic-net   -e ELASTIC_PASSWORD=changeme   -e "discovery.type=single-node"   -e "xpack.security.http.ssl.enabled=false"   -e "xpack.license.self_generated.type=trial"   docker.elastic.co/elasticsearch/elasticsearch:8.15.1
-```
-
-See the [official Elastic documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/run-elasticsearch-locally.html) for more information on running it locally.
-
-Then populate the following in your `.env` file:
-
-```
-# As both Elasticsearch and LangGraph Studio runs in Docker, we need to use host.docker.internal to access.
-
-ELASTICSEARCH_URL=http://host.docker.internal:9200
-ELASTICSEARCH_USER=elastic
-ELASTICSEARCH_PASSWORD=changeme
-```
-#### MongoDB Atlas
-
-MongoDB Atlas is a fully-managed cloud database that includes vector search capabilities for AI-powered applications.
-
-1. Create a free Atlas cluster:
-- Go to the [MongoDB Atlas website](https://www.mongodb.com/cloud/atlas/register) and sign up for a free account.
-- After logging in, create a free cluster by following the on-screen instructions.
-
-2. Create a vector search index
-- Follow the instructions at [the Mongo docs](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-type/)
-- By default, we use the collection `langgraph_retrieval_agent.default` - create the index there
-- Add an indexed filter for path `user_id`
-- **IMPORTANT**: select Atlas Vector Search NOT Atlas Search when creating the index
-Your final JSON editor configuration should look something like the following:
-
-```json
-{
-  "fields": [
-    {
-      "numDimensions": 1536,
-      "path": "embedding",
-      "similarity": "cosine",
-      "type": "vector"
-    },
-    {
-      "path": "user_id",
-      "type": "filter"
-    }
-  ]
-}
-```
-
-The exact numDimensions may differ if you select a different embedding model.
-
-2. Set up your environment:
-- In the Atlas dashboard, click on "Connect" for your cluster.
-- Choose "Connect your application" and copy the provided connection string.
-- Create a `.env` file in your project root if you haven't already.
-- Add your MongoDB Atlas connection string to the `.env` file:
-
-```
-MONGODB_URI="mongodb+srv://username:password@your-cluster-url.mongodb.net/?retryWrites=true&w=majority&appName=your-cluster-name"
-```
-
-Replace `username`, `password`, `your-cluster-url`, and `your-cluster-name` with your actual credentials and cluster information.
-#### Pinecone Serverless
-
-Pinecone is a managed, cloud-native vector database that provides long-term memory for high-performance AI applications.
-
-1. Sign up for a Pinecone account at [https://login.pinecone.io/login](https://login.pinecone.io/login) if you haven't already.
-
-2. After logging in, generate an API key from the Pinecone console.
-
-3. Create a serverless index:
-   - Choose a name for your index (e.g., "example-index")
-   - Set the dimension based on your embedding model (e.g., 1536 for OpenAI embeddings)
-   - Select "cosine" as the metric
-   - Choose "Serverless" as the index type
-   - Select your preferred cloud provider and region (e.g., AWS us-east-1)
-
-4. Once you have created your index and obtained your API key, add them to your `.env` file:
-
-```
-PINECONE_API_KEY=your-api-key
-PINECONE_INDEX_NAME=your-index-name
-```
-
-
-### Setup Model
-
-The defaults values for `response_model`, `query_model` are shown below:
-
-```yaml
-response_model: anthropic/claude-3-5-sonnet-20240620
-query_model: anthropic/claude-3-haiku-20240307
-```
-
-Follow the instructions below to get set up, or pick one of the additional options.
-
-#### Anthropic
-
-To use Anthropic's chat models:
-
-1. Sign up for an [Anthropic API key](https://console.anthropic.com/) if you haven't already.
-2. Once you have your API key, add it to your `.env` file:
-
-```
-ANTHROPIC_API_KEY=your-api-key
-```
-#### OpenAI
-
-To use OpenAI's chat models:
-
-1. Sign up for an [OpenAI API key](https://platform.openai.com/signup).
-2. Once you have your API key, add it to your `.env` file:
-```
-OPENAI_API_KEY=your-api-key
-```
-
-
-
-### Setup Embedding Model
-
-The defaults values for `embedding_model` are shown below:
-
-```yaml
-embedding_model: openai/text-embedding-3-small
-```
-
-Follow the instructions below to get set up, or pick one of the additional options.
-
-#### OpenAI
-
-To use OpenAI's embeddings:
-
-1. Sign up for an [OpenAI API key](https://platform.openai.com/signup).
-2. Once you have your API key, add it to your `.env` file:
-```
-OPENAI_API_KEY=your-api-key
-```
-
-#### Cohere
-
-To use Cohere's embeddings:
-
-1. Sign up for a [Cohere API key](https://dashboard.cohere.com/welcome/register).
-2. Once you have your API key, add it to your `.env` file:
-
+**Standard Local Setup:**
 ```bash
-COHERE_API_KEY=your-api-key
+docker run -p 9200:9200 -d --name elasticsearch \
+  -e ELASTIC_PASSWORD="your_secure_password" \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.http.ssl.enabled=false" \
+  -e "xpack.license.self_generated.type=trial" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.15.1
 ```
 
-
-
-
-
-<!--
-End setup instructions
--->
-
-## Using
-
-Once you've set up your retriever saved your model secrets, it's time to try it out! First, let's add some information to the index. Open studio, select the "indexer" graph from the dropdown in the top-left, provide an example user ID in the configuration at the bottom, and then add some content to chat over.
-
-```json
-[{ "page_content": "My cat knows python." }]
+**Environment Configuration:**
+```bash
+# Local Elasticsearch Configuration
+ELASTICSEARCH_URL=http://localhost:9200  # For direct access
+# OR for Docker networking with LangGraph Studio:
+# ELASTICSEARCH_URL=http://172.17.0.1:9200  # Use your Docker gateway IP
+ELASTICSEARCH_HOST=localhost
+ELASTICSEARCH_PORT=9200
+ELASTICSEARCH_USER=elastic
+ELASTICSEARCH_PASSWORD=your_secure_password
 ```
 
-When you upload content, it will be indexed under the configured user ID. You know it's complete when the indexer "delete"'s the content from its graph memory (since it's been persisted in your configured storage provider).
+> **Note**: If LangGraph Studio runs in Docker and can't connect to `localhost:9200`, use the Docker gateway IP (typically `172.17.0.1`) or set up a custom Docker network as described below.
 
-Next, open the "retrieval_graph" using the dropdown in the top-left. Ask it about your cat to confirm it can fetch the required information! If you change the `user_id` at any time, notice how it no longer has access to your information. The graph is doing simple filtering of content so you only access the information under the provided ID.
+##### Docker Network Configuration for LangGraph Studio
 
-## How to customize
+**Important**: When using LangGraph Studio with Docker, Elasticsearch and LangGraph Studio containers must be on the same Docker network to communicate properly.
 
-You can customize this retrieval agent template in several ways:
-
-1. **Change the retriever**: You can switch between different vector stores (Elasticsearch, MongoDB, Pinecone) by modifying the `retriever_provider` in the configuration. Each provider has its own setup instructions in the "Getting Started" section above.
-
-2. **Modify the embedding model**: You can change the embedding model used for document indexing and query embedding by updating the `embedding_model` in the configuration. Options include various OpenAI and Cohere models.
-
-3. **Adjust search parameters**: Fine-tune the retrieval process by modifying the `search_kwargs` in the configuration. This allows you to control aspects like the number of documents retrieved or similarity thresholds.
-
-4. **Customize the response generation**: You can modify the `response_system_prompt` to change how the agent formulates its responses. This allows you to adjust the agent's personality or add specific instructions for answer generation.
-
-5. **Change the language model**: Update the `response_model` in the configuration to use different language models for response generation. Options include various Claude models from Anthropic, as well as models from other providers like Fireworks AI.
-
-6. **Extend the graph**: You can add new nodes or modify existing ones in the `src/retrieval_agent/graph.py` file to introduce additional processing steps or decision points in the agent's workflow.
-
-7. **Add new tools**: Implement new tools or API integrations in `src/retrieval_agent/tools.py` to expand the agent's capabilities beyond simple retrieval and response generation.
-
-8. **Modify prompts**: Update the prompts used for query generation and response formulation in `src/retrieval_agent/prompts.py` to better suit your specific use case or to improve the agent's performance.
-
-Remember to test your changes thoroughly to ensure they improve the agent's performance for your specific use case.
-
-## Development
-
-While iterating on your graph, you can edit past state and rerun your app from past states to debug specific nodes. Local changes will be automatically applied via hot reload. Try adding an interrupt before the agent calls tools, updating the default system message in `src/retrieval_agent/utils.py` to take on a persona, or adding additional nodes and edges!
-
-Follow up requests will be appended to the same thread. You can create an entirely new thread, clearing previous history, using the `+` button in the top right.
-
-You can find the latest (under construction) docs on [LangGraph](https://github.com/langchain-ai/langgraph) here, including examples and other references. Using those guides can help you pick the right patterns to adapt here for your use case.
-
-LangGraph Studio also integrates with [LangSmith](https://smith.langchain.com/) for more in-depth tracing and collaboration with teammates.
-docker run \
-  -p 127.0.0.1:9200:9200 \
-  -d \
-  --name elasticsearch \
-  -e ELASTIC_PASSWORD=7+SWq3Hi*pVQ4HT4Y3fP \
+**Option 1: Use Default Bridge Network (Recommended)**
+```bash
+# Start Elasticsearch on default bridge network
+docker run -p 9200:9200 -d --name elasticsearch \
+  -e ELASTIC_PASSWORD="your_secure_password" \
   -e "discovery.type=single-node" \
   -e "xpack.security.http.ssl.enabled=false" \
   -e "xpack.license.self_generated.type=trial" \
   docker.elastic.co/elasticsearch/elasticsearch:8.15.1
 
-<!--
-Configuration auto-generated by `langgraph template lock`. DO NOT EDIT MANUALLY.
-{
-  "config_schemas": {
-    "indexer": {
-      "type": "object",
-      "properties": {
-        "embedding_model": {
-          "type": "string",
-          "default": "openai/text-embedding-3-small",
-          "description": "Name of the embedding model to use. Must be a valid embedding model name.",
-          "environment": [
-            {
-              "value": "cohere/embed-english-light-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-light-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-light-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-3-large",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-3-small",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-ada-002",
-              "variables": "OPENAI_API_KEY"
-            }
-          ]
-        },
-        "retriever_provider": {
-          "enum": [
-            "elastic",
-            "elastic-local",
-            "mongodb",
-            "pinecone"
-          ],
-          "default": "elastic",
-          "description": "The vector store provider to use for retrieval. Options are 'elastic', 'pinecone', or 'mongodb'.",
-          "environment": [
-            {
-              "value": "elastic",
-              "variables": [
-                "ELASTICSEARCH_URL",
-                "ELASTICSEARCH_API_KEY"
-              ]
-            },
-            {
-              "value": "elastic-local",
-              "variables": [
-                "ELASTICSEARCH_URL",
-                "ELASTICSEARCH_USER",
-                "ELASTICSEARCH_PASSWORD"
-              ]
-            },
-            {
-              "value": "mongodb",
-              "variables": [
-                "MONGODB_URI"
-              ]
-            },
-            {
-              "value": "pinecone",
-              "variables": [
-                "PINECONE_API_KEY",
-                "PINECONE_INDEX_NAME"
-              ]
-            }
-          ],
-          "type": "string"
-        }
-      }
-    },
-    "retrieval_graph": {
-      "type": "object",
-      "properties": {
-        "embedding_model": {
-          "type": "string",
-          "default": "openai/text-embedding-3-small",
-          "description": "Name of the embedding model to use. Must be a valid embedding model name.",
-          "environment": [
-            {
-              "value": "cohere/embed-english-light-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-light-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-english-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-light-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-v2.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "cohere/embed-multilingual-v3.0",
-              "variables": "COHERE_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-3-large",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-3-small",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/text-embedding-ada-002",
-              "variables": "OPENAI_API_KEY"
-            }
-          ]
-        },
-        "retriever_provider": {
-          "enum": [
-            "elastic",
-            "elastic-local",
-            "mongodb",
-            "pinecone"
-          ],
-          "default": "elastic",
-          "description": "The vector store provider to use for retrieval. Options are 'elastic', 'pinecone', or 'mongodb'.",
-          "environment": [
-            {
-              "value": "elastic",
-              "variables": [
-                "ELASTICSEARCH_URL",
-                "ELASTICSEARCH_API_KEY"
-              ]
-            },
-            {
-              "value": "elastic-local",
-              "variables": [
-                "ELASTICSEARCH_URL",
-                "ELASTICSEARCH_USER",
-                "ELASTICSEARCH_PASSWORD"
-              ]
-            },
-            {
-              "value": "mongodb",
-              "variables": [
-                "MONGODB_URI"
-              ]
-            },
-            {
-              "value": "pinecone",
-              "variables": [
-                "PINECONE_API_KEY",
-                "PINECONE_INDEX_NAME"
-              ]
-            }
-          ],
-          "type": "string"
-        },
-        "response_model": {
-          "type": "string",
-          "default": "anthropic/claude-3-5-sonnet-20240620",
-          "description": "The language model used for generating responses. Should be in the form: provider/model-name.",
-          "environment": [
-            {
-              "value": "anthropic/claude-1.2",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-2.0",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-2.1",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-5-sonnet-20240620",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-haiku-20240307",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-opus-20240229",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-sonnet-20240229",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-instant-1.2",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0125",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0301",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-1106",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-16k",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-16k-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0125-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0314",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-1106-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k-0314",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-turbo",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-turbo-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-vision-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4o",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4o-mini",
-              "variables": "OPENAI_API_KEY"
-            }
-          ]
-        },
-        "query_model": {
-          "type": "string",
-          "default": "anthropic/claude-3-haiku-20240307",
-          "description": "The language model used for processing and refining queries. Should be in the form: provider/model-name.",
-          "environment": [
-            {
-              "value": "anthropic/claude-1.2",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-2.0",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-2.1",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-5-sonnet-20240620",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-haiku-20240307",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-opus-20240229",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-3-sonnet-20240229",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "anthropic/claude-instant-1.2",
-              "variables": "ANTHROPIC_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0125",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0301",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-1106",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-16k",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-3.5-turbo-16k-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0125-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0314",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-1106-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k-0314",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-32k-0613",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-turbo",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-turbo-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4-vision-preview",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4o",
-              "variables": "OPENAI_API_KEY"
-            },
-            {
-              "value": "openai/gpt-4o-mini",
-              "variables": "OPENAI_API_KEY"
-            }
-          ]
-        }
-      }
-    }
-  }
-}
--->
+# Use gateway IP in your .env file
+ELASTICSEARCH_URL=http://172.17.0.1:9200  # or your Docker gateway IP
+```
+
+**Option 2: Create Custom Network**
+```bash
+# Create a custom network
+docker network create krrs-network
+
+# Start Elasticsearch on the custom network
+docker run -p 9200:9200 -d --name elasticsearch --network krrs-network \
+  -e ELASTIC_PASSWORD="your_secure_password" \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.http.ssl.enabled=false" \
+  -e "xpack.license.self_generated.type=trial" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.15.1
+
+# Connect LangGraph Studio to the same network
+# (This is typically done automatically by LangGraph Studio)
+
+# Use container name in .env file
+ELASTICSEARCH_URL=http://elasticsearch:9200
+```
+
+**Option 3: Find Your Docker Gateway IP**
+```bash
+# Find your Docker gateway IP
+docker network inspect bridge | grep Gateway
+
+# Use the gateway IP in your .env file
+ELASTICSEARCH_URL=http://YOUR_GATEWAY_IP:9200
+```
+
+For detailed troubleshooting and network configuration, see [ELASTICSEARCH_SETUP.md](./ELASTICSEARCH_SETUP.md).
+
+##### Alternative: Cloud Elasticsearch
+
+**Elasticsearch Serverless (14-day trial):**
+1. Sign up at [Elasticsearch Serverless](https://cloud.elastic.co/registration?onboarding_token=search&cta=cloud-registration&tech=trial&plcmt=article%20content&pg=langchain)
+2. Get your Elasticsearch URL and create an API key
+3. Configure your `.env`:
+
+```bash
+ELASTICSEARCH_URL=<ES_URL>
+ELASTICSEARCH_API_KEY=<API_KEY>
+```
+
+**Elastic Cloud:**
+1. Sign up at [Elastic Cloud](https://cloud.elastic.co/registration?onboarding_token=search&cta=cloud-registration&tech=trial&plcmt=article%20content&pg=langchain)
+2. Create deployment and API key
+3. Configure your `.env` as above
+
+
+### Setup Language Models
+
+KRRS uses multiple language models for different purposes:
+
+**Default Configuration:**
+```yaml
+response_model: anthropic/claude-3-5-sonnet-20240620  # For specialist agents
+query_model: anthropic/claude-3-haiku-20240307        # For query processing
+```
+
+#### Anthropic Claude (Recommended)
+
+Anthropic's Claude models provide excellent performance for educational content:
+
+1. Sign up for an [Anthropic API key](https://console.anthropic.com/)
+2. Add to your `.env` file:
+
+```bash
+ANTHROPIC_API_KEY=your-api-key
+```
+
+**Model Options:**
+- `claude-3-5-sonnet-20240620`: Best for complex reasoning and detailed explanations
+- `claude-3-haiku-20240307`: Fast and efficient for query processing
+- `claude-3-opus-20240229`: Most capable but slower
+
+#### OpenAI Models
+
+Alternative to Anthropic with strong educational performance:
+
+1. Sign up for an [OpenAI API key](https://platform.openai.com/signup)
+2. Add to your `.env` file:
+
+```bash
+OPENAI_API_KEY=your-api-key
+```
+
+**Model Options:**
+- `gpt-4o`: Latest and most capable
+- `gpt-4-turbo`: Good balance of performance and speed
+- `gpt-3.5-turbo`: Cost-effective option
+
+
+
+### Setup Embedding Model
+
+KRRS uses embeddings to convert documents and queries into vector representations for semantic search.
+
+**Default Configuration:**
+```yaml
+embedding_model: google/text-embedding-004
+```
+
+#### Google Embeddings (Default)
+
+Google's text-embedding-004 provides excellent performance for educational content:
+
+1. Get a [Google AI API key](https://aistudio.google.com/app/apikey)
+2. Add to your `.env` file:
+
+```bash
+GOOGLE_API_KEY=your-api-key
+```
+
+#### OpenAI Embeddings
+
+Alternative high-quality embedding option:
+
+1. Use your existing OpenAI API key or get one at [OpenAI](https://platform.openai.com/signup)
+2. Update configuration to use: `openai/text-embedding-3-small` or `openai/text-embedding-3-large`
+
+```bash
+OPENAI_API_KEY=your-api-key
+```
+
+#### Cohere Embeddings
+
+Multilingual embedding support:
+
+1. Sign up for a [Cohere API key](https://dashboard.cohere.com/welcome/register)
+2. Add to your `.env` file:
+
+```bash
+COHERE_API_KEY=your-api-key
+```
+
+### Optional: Web Search Enhancement
+
+Enable web search for enhanced information retrieval when local knowledge is insufficient:
+
+```bash
+# Optional: Enable web search with Tavily
+TAVILY_API_KEY=your-tavily-api-key
+```
+
+Get a free API key at [Tavily](https://tavily.com/).
+
+## Using KRRS
+
+### 1. Index Educational Content
+
+First, add educational content to your knowledge base using the **indexer** graph:
+
+1. Open LangGraph Studio and select the **"indexer"** graph from the dropdown
+2. Configure a `user_id` in the configuration panel
+3. Add educational content in JSON format:
+
+```json
+[
+  { "page_content": "Photosynthesis is the process by which plants convert light energy into chemical energy..." },
+  { "page_content": "The American Civil War lasted from 1861 to 1865..." },
+  { "page_content": "Shakespeare's Hamlet explores themes of revenge, mortality, and madness..." }
+]
+```
+
+4. The system will process and index your documents for retrieval
+5. Content is successfully indexed when the graph shows "delete" in memory
+
+### 2. Query the Multi-Agent System
+
+Switch to the **"retrieval_graph"** and interact with the intelligent multi-agent system:
+
+1. Select **"retrieval_graph"** from the dropdown
+2. Ensure the `user_id` matches your indexing configuration
+3. Ask questions across different domains:
+
+**Science Query:**
+```
+"Explain the process of photosynthesis and its importance in ecosystems"
+```
+
+**History Query:**
+```
+"What were the main causes and consequences of the American Civil War?"
+```
+
+**Literature Query:**
+```
+"Analyze the theme of revenge in Shakespeare's Hamlet"
+```
+
+**General Query:**
+```
+"How can I improve my study habits for better academic performance?"
+```
+
+### 3. Observe Multi-Agent Behavior
+
+Watch how the system:
+- **Classifies** your query into the appropriate domain
+- **Routes** to the specialist agent (Science, History, Literature, or General)
+- **Retrieves** relevant information from your knowledge base
+- **Enhances** with web search if needed
+- **Evaluates** response quality through the critique agent
+- **Delivers** comprehensive, educational responses
+
+### 4. User Context and Personalization
+
+- Each `user_id` has isolated document access
+- Change the `user_id` to see how responses change based on available knowledge
+- The system maintains conversation context within each session
+
+## Customization and Extension
+
+KRRS provides multiple customization points for educational institutions and developers:
+
+### 1. Agent Specialization
+
+**Modify Specialist Agents** (`src/retrieval_graph/prompts.py`):
+- Customize subject-specific prompts for different educational levels
+- Add domain-specific reasoning frameworks
+- Adjust response structures for your curriculum
+
+**Add New Specialist Agents**:
+- Create new agents for specific subjects (e.g., Mathematics, Physics, Computer Science)
+- Implement in `src/retrieval_graph/graph.py`
+- Update query classification system
+
+### 2. Retrieval Enhancement
+
+**Configure Search Parameters** (`src/retrieval_graph/configuration.py`):
+- Adjust `search_kwargs` for retrieval fine-tuning
+- Modify similarity thresholds
+- Configure result limits
+
+**Multi-Modal Retrieval**:
+- Extend document processing for PDFs, images, audio
+- Implement in `src/retrieval_graph/utils.py`
+
+### 3. Model Configuration
+
+**Language Models**:
+- Switch between providers (Anthropic, OpenAI, etc.)
+- Configure different models for different agents
+- Adjust temperature and generation parameters
+
+**Embedding Models**:
+- Choose embeddings optimized for your content domain
+- Configure multilingual embeddings for international education
+
+### 4. Quality Assurance
+
+**Critique System** (`src/retrieval_graph/prompts.py`):
+- Customize evaluation criteria for educational standards
+- Add domain-specific quality checks
+- Implement fact-verification workflows
+
+### 5. Integration and Deployment
+
+**API Integration**:
+- Connect to Learning Management Systems (LMS)
+- Integrate with educational databases
+- Add authentication and user management
+
+**Performance Optimization**:
+- Cache frequently accessed content
+- Implement response time monitoring
+- Scale agent deployment
+
+### 6. Educational Features
+
+**Assessment Integration**:
+- Generate quiz questions from content
+- Provide learning path recommendations
+- Track student interaction patterns
+
+**Curriculum Alignment**:
+- Map content to educational standards
+- Implement grade-level appropriate responses
+- Add learning objective tracking
+
+## Development
+
+### Development Workflow
+
+KRRS supports iterative development with hot reload capabilities:
+
+1. **Real-time Testing**: Edit graph nodes and see changes immediately
+2. **State Debugging**: Edit past states and rerun from specific points
+3. **Node Isolation**: Test individual specialist agents independently
+4. **Conversation Threading**: Use the `+` button to start fresh conversations
+
+### Testing and Quality Assurance
+
+**Run Tests:**
+```bash
+# Unit tests
+make test
+
+# Watch mode for continuous testing
+make test_watch
+
+# Extended tests including integration
+make extended_tests
+```
+
+**Code Quality:**
+```bash
+# Linting and formatting
+make lint
+make format
+
+# Type checking
+make lint  # includes mypy
+```
+
+### Architecture Overview
+
+**Core Components:**
+- `src/retrieval_graph/graph.py`: Multi-agent workflow definition
+- `src/retrieval_graph/prompts.py`: Specialist agent prompts and instructions
+- `src/retrieval_graph/configuration.py`: System configuration and validation
+- `src/retrieval_graph/state.py`: State management and data structures
+- `src/retrieval_graph/retrieval.py`: Document retrieval and search logic
+- `src/retrieval_graph/utils.py`: Utility functions and helpers
+
+**Key Design Patterns:**
+- **Agent Specialization**: Domain-specific agents with tailored prompts
+- **Tool Integration**: Seamless tool calling for retrieval and web search
+- **Quality Feedback Loop**: Critique-driven response improvement
+- **Hierarchical Knowledge**: Local knowledge base + web search fallback
+
+### Contributing
+
+When contributing to KRRS:
+
+1. **Follow Code Standards**: Use the provided linting and formatting tools
+2. **Test Thoroughly**: Ensure changes work across different educational domains
+3. **Document Changes**: Update prompts and configuration documentation
+4. **Educational Focus**: Keep educational effectiveness as the primary goal
+
+### Integration with Educational Tools
+
+**LangSmith Integration**: Built-in tracing and collaboration features for educational teams.
+
+**Monitoring**: Track agent performance, response quality, and student interaction patterns.
+
+**Curriculum Mapping**: Extend the system to align with specific educational standards and learning objectives.
+## Project Information
+
+**Version**: 0.0.1  
+**Author**: Sabin Pokharel (savinpokharel@gmail.com)  
+**License**: MIT  
+
+**Key Dependencies:**
+- LangGraph: Multi-agent workflow orchestration
+- LangChain: LLM and embedding integrations
+- Elasticsearch: Vector storage and retrieval
+- Anthropic/OpenAI: Language model providers
+- Tavily: Web search capabilities
+
+**Resources:**
+- [LangGraph Documentation](https://github.com/langchain-ai/langgraph)
+- [LangGraph Studio](https://github.com/langchain-ai/langgraph-studio)
+- [LangSmith Tracing](https://smith.langchain.com/)
+- [Elasticsearch Setup Guide](./ELASTICSEARCH_SETUP.md)
