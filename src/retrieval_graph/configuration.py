@@ -138,3 +138,24 @@ class Configuration(IndexConfiguration):
             "description": "The language model used for processing and refining queries. Should be in the form: provider/model-name."
         },
     )
+
+    enable_web_search: bool = field(
+        default=True,
+        metadata={
+            "description": "Whether to enable web search when local retrieval is insufficient."
+        },
+    )
+
+    web_search_api_key: str = field(
+        default_factory=lambda: os.getenv("TAVILY_API_KEY", ""),
+        metadata={
+            "description": "API key for web search service (Tavily)."
+        },
+    )
+
+    min_retrieval_threshold: int = field(
+        default=2,
+        metadata={
+            "description": "Minimum number of documents required from local retrieval before triggering web search."
+        },
+    )
