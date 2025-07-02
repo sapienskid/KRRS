@@ -8,7 +8,8 @@ Functions:
     format_docs: Convert documents to an xml-formatted string.
 """
 
-from typing import Optional, List
+import logging
+from typing import List
 
 from langchain.chat_models import init_chat_model
 from langchain_core.documents import Document
@@ -18,10 +19,12 @@ from langchain_core.messages import AnyMessage
 # Optional imports for document processing
 try:
     import asyncio
-    import aiohttp
-    import PyPDF2
     import io
     from urllib.parse import urlparse
+
+    import aiohttp
+    import PyPDF2
+
     DOCUMENT_PROCESSING_AVAILABLE = True
 except ImportError:
     DOCUMENT_PROCESSING_AVAILABLE = False
@@ -74,7 +77,7 @@ def _format_doc(doc: Document) -> str:
     return f"<document{meta}>\n{doc.page_content}\n</document>"
 
 
-def format_docs(docs: Optional[list[Document]]) -> str:
+def format_docs(docs: list[Document] | None) -> str:
     """Format a list of documents as XML.
 
     This function takes a list of Document objects and formats them into a single XML string.
@@ -133,7 +136,7 @@ async def extract_text_from_pdf_url(pdf_url: str) -> str:
     """
     if not DOCUMENT_PROCESSING_AVAILABLE:
         return "Document processing dependencies not available. Please install: pip install aiohttp PyPDF2"
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(pdf_url) as response:
@@ -164,7 +167,7 @@ async def extract_text_from_web_url(web_url: str) -> str:
     """
     if not DOCUMENT_PROCESSING_AVAILABLE:
         return "Document processing dependencies not available. Please install: pip install aiohttp beautifulsoup4"
-    
+
     try:
         from bs4 import BeautifulSoup
 
@@ -183,7 +186,9 @@ async def extract_text_from_web_url(web_url: str) -> str:
 
                     # Clean up whitespace
                     lines = (line.strip() for line in text.splitlines())
-                    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                    chunks = (
+                        phrase.strip() for line in lines for phrase in line.split("  ")
+                    )
                     text = " ".join(chunk for chunk in chunks if chunk)
 
                     return text
@@ -205,12 +210,14 @@ def create_documents_from_urls(urls: List[str]) -> List[Document]:
         List[Document]: List of Document objects with extracted content.
     """
     if not DOCUMENT_PROCESSING_AVAILABLE:
-        print("Document processing dependencies not available. Please install: pip install aiohttp PyPDF2 beautifulsoup4")
+        logging.warning(
+            "Document processing dependencies not available. Please install: pip install aiohttp PyPDF2 beautifulsoup4"
+        )
         return []
-    
+
     documents = []
 
-    async def process_url(url: str) -> Optional[Document]:
+    async def process_url(url: str) -> Document | None:
         try:
             parsed_url = urlparse(url)
             if parsed_url.path.lower().endswith(".pdf"):
@@ -220,7 +227,11 @@ def create_documents_from_urls(urls: List[str]) -> List[Document]:
                 content = await extract_text_from_web_url(url)
                 doc_type = "webpage"
 
-            if content and not content.startswith("Failed") and not content.startswith("Error"):
+            if (
+                content
+                and not content.startswith("Failed")
+                and not content.startswith("Error")
+            ):
                 return Document(
                     page_content=content,
                     metadata={
@@ -230,7 +241,7 @@ def create_documents_from_urls(urls: List[str]) -> List[Document]:
                     },
                 )
         except Exception as e:
-            print(f"Error processing {url}: {str(e)}")
+            logging.error("Error processing %s: %s", url, str(e))
 
         return None
 
@@ -248,7 +259,7 @@ def create_documents_from_urls(urls: List[str]) -> List[Document]:
     return documents
 
 
-def format_docs_with_citations(docs: Optional[list[Document]]) -> str:
+def format_docs_with_citations(docs: list | Document) -> str:
     """Format documents with enhanced citation information.
 
     Args:
@@ -267,7 +278,7 @@ def format_docs_with_citations(docs: Optional[list[Document]]) -> str:
         title = metadata.get("title", f"Document {i}")
         doc_type = metadata.get("type", "unknown")
 
-        citation_info = f"title=\"{title}\" source=\"{source}\" type=\"{doc_type}\""
+        citation_info = f'title="{title}" source="{source}" type="{doc_type}"'
         formatted.append(f"<document {citation_info}>\n{doc.page_content}\n</document>")
 
     return f"""<documents>
