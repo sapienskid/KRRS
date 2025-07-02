@@ -8,12 +8,23 @@ Functions:
     format_docs: Convert documents to an xml-formatted string.
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from langchain.chat_models import init_chat_model
 from langchain_core.documents import Document
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AnyMessage
+
+# Optional imports for document processing
+try:
+    import asyncio
+    import aiohttp
+    import PyPDF2
+    import io
+    from urllib.parse import urlparse
+    DOCUMENT_PROCESSING_AVAILABLE = True
+except ImportError:
+    DOCUMENT_PROCESSING_AVAILABLE = False
 
 
 def get_message_text(msg: AnyMessage) -> str:
@@ -109,3 +120,36 @@ def load_chat_model(fully_specified_name: str) -> BaseChatModel:
         provider = ""
         model = fully_specified_name
     return init_chat_model(model, model_provider=provider)
+
+
+async def extract_text_from_pdf_url(pdf_url: str) -> str:
+    """Extract text content from a PDF URL.
+
+    Args:
+        pdf_url (str): URL pointing to a PDF file.
+
+    Returns:
+        str: Extracted text content from the PDF.
+    """
+    if not DOCUMENT_PROCESSING_AVAILABLE:
+        return "Document processing dependencies not available. Please install: pip install aiohttp PyPDF2"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(pdf_url) as response:
+                if response.status == 200:
+                    pdf_content = await response.read()
+                    pdf_file = io.BytesIO(pdf_content)
+                    pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+                    text = ""
+                    for page in pdf_reader.pages:
+                        text += page.extract_text() + "\n"
+
+                    return text.strip()
+                else:
+                    return f"Failed to download PDF: HTTP {response.status}"
+    except Exception as e:
+        return f"Error processing PDF: {str(e)}"
+
+
