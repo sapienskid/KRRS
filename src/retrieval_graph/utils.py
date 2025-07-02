@@ -153,3 +153,45 @@ async def extract_text_from_pdf_url(pdf_url: str) -> str:
         return f"Error processing PDF: {str(e)}"
 
 
+async def extract_text_from_web_url(web_url: str) -> str:
+    """Extract text content from a web URL.
+
+    Args:
+        web_url (str): URL pointing to a web page.
+
+    Returns:
+        str: Extracted text content from the web page.
+    """
+    if not DOCUMENT_PROCESSING_AVAILABLE:
+        return "Document processing dependencies not available. Please install: pip install aiohttp beautifulsoup4"
+    
+    try:
+        from bs4 import BeautifulSoup
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(web_url) as response:
+                if response.status == 200:
+                    html_content = await response.text()
+                    soup = BeautifulSoup(html_content, "html.parser")
+
+                    # Remove script and style elements
+                    for script in soup(["script", "style"]):
+                        script.decompose()
+
+                    # Extract text
+                    text = soup.get_text()
+
+                    # Clean up whitespace
+                    lines = (line.strip() for line in text.splitlines())
+                    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                    text = " ".join(chunk for chunk in chunks if chunk)
+
+                    return text
+                else:
+                    return f"Failed to access URL: HTTP {response.status}"
+    except ImportError:
+        return "BeautifulSoup not available. Please install with: pip install beautifulsoup4"
+    except Exception as e:
+        return f"Error processing web page: {str(e)}"
+
+
