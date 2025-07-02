@@ -195,3 +195,56 @@ async def extract_text_from_web_url(web_url: str) -> str:
         return f"Error processing web page: {str(e)}"
 
 
+def create_documents_from_urls(urls: List[str]) -> List[Document]:
+    """Create Document objects from a list of URLs (PDFs and web pages).
+
+    Args:
+        urls (List[str]): List of URLs to process.
+
+    Returns:
+        List[Document]: List of Document objects with extracted content.
+    """
+    if not DOCUMENT_PROCESSING_AVAILABLE:
+        print("Document processing dependencies not available. Please install: pip install aiohttp PyPDF2 beautifulsoup4")
+        return []
+    
+    documents = []
+
+    async def process_url(url: str) -> Optional[Document]:
+        try:
+            parsed_url = urlparse(url)
+            if parsed_url.path.lower().endswith(".pdf"):
+                content = await extract_text_from_pdf_url(url)
+                doc_type = "pdf"
+            else:
+                content = await extract_text_from_web_url(url)
+                doc_type = "webpage"
+
+            if content and not content.startswith("Failed") and not content.startswith("Error"):
+                return Document(
+                    page_content=content,
+                    metadata={
+                        "source": url,
+                        "type": doc_type,
+                        "title": parsed_url.path.split("/")[-1] or parsed_url.netloc,
+                    },
+                )
+        except Exception as e:
+            print(f"Error processing {url}: {str(e)}")
+
+        return None
+
+    async def process_all_urls():
+        tasks = [process_url(url) for url in urls]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for result in results:
+            if isinstance(result, Document):
+                documents.append(result)
+
+    # Run the async function
+    asyncio.run(process_all_urls())
+
+    return documents
+
+
