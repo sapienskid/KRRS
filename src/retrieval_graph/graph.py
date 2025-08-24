@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from retrieval_graph import prompts, retrieval
 from retrieval_graph.configuration import Configuration
 from retrieval_graph.state import InputState, State
-from retrieval_graph.utils import format_docs, get_message_text, load_chat_model
+from retrieval_graph.utils import format_docs_safe, get_message_text, load_chat_model
 
 # Define the function that calls the model
 
@@ -114,17 +114,43 @@ async def handle_tool_calls(state: State, config: RunnableConfig) -> dict:
         if tool_name == "retrieve_documents":
             try:
                 with retrieval.make_retriever(config) as retriever:
+                    # Only retrieve a limited number of documents (k=1 by default from configuration)
                     docs = await retriever.ainvoke(query, config)
-                    retrieved_docs.extend(docs)
                     
+                    # Add to our retrieved documents list
                     if docs:
+                        # Truncate document content before storing to prevent token overflow
+                        truncated_docs = []
+                        for doc in docs:
+                            # Limit individual document content to prevent excessive accumulation
+                            content = doc.page_content
+                            if len(content) > 3000:  # 3000 chars ~ 750 tokens
+                                content = content[:3000] + "... [TRUNCATED FOR TOKEN EFFICIENCY]"
+                            
+                            truncated_doc = Document(
+                                page_content=content,
+                                metadata=doc.metadata
+                            )
+                            truncated_docs.append(truncated_doc)
+                        
+                        # Only add relevant documents to state
+                        retrieved_docs.extend(truncated_docs)
+                        
+                        # Format a summary of the retrieved documents for the tool response
+                        # Keep tool response concise to prevent token overflow
                         docs_content = "\n\n".join([
-                            f"Document {i+1}:\nContent: {doc.page_content[:500]}...\nSource: {doc.metadata.get('source', 'Unknown')}"
-                            for i, doc in enumerate(docs[:3])
+                            f"Document {i+1}:\nContent: {doc.page_content[:300]}...\nSource: {doc.metadata.get('source', 'Unknown')}"
+                            for i, doc in enumerate(docs)
                         ])
-                        content = f"Retrieved {len(docs)} documents:\n\n{docs_content}"
+                        content = f"Retrieved {len(docs)} relevant document(s):\n\n{docs_content}"
                     else:
                         content = "No documents found in the knowledge base for this query."
+                        
+                        # If no documents found in local retrieval and we have web search configured,
+                        # suggest using web_search tool
+                        configuration = Configuration.from_runnable_config(config)
+                        if configuration.enable_web_search:
+                            content += "\nYou may want to try using web_search for this query."
                         
             except Exception as e:
                 content = f"Error during retrieval: {str(e)}"
@@ -132,14 +158,21 @@ async def handle_tool_calls(state: State, config: RunnableConfig) -> dict:
         elif tool_name == "web_search":
             try:
                 from langchain_community.tools import TavilySearchResults
-                search_tool = TavilySearchResults(max_results=5)
+                
+                # Limit web search results to 3 for more focused and relevant results
+                search_tool = TavilySearchResults(max_results=3)
                 search_results = search_tool.invoke({"query": query})
                 
                 web_docs = []
                 for result in search_results:
                     if isinstance(result, dict):
+                        # Truncate web content to prevent token overflow
+                        content = result.get("content", "")
+                        if len(content) > 2000:  # Limit web content to 2000 chars
+                            content = content[:2000] + "... [WEB CONTENT TRUNCATED]"
+                        
                         doc = Document(
-                            page_content=result.get("content", ""),
+                            page_content=content,
                             metadata={
                                 "source": result.get("url", ""),
                                 "title": result.get("title", ""),
@@ -148,14 +181,15 @@ async def handle_tool_calls(state: State, config: RunnableConfig) -> dict:
                         )
                         web_docs.append(doc)
                 
+                # Add to our retrieved documents list
                 retrieved_docs.extend(web_docs)
                 
                 if web_docs:
                     docs_content = "\n\n".join([
-                        f"Result {i+1}:\nTitle: {doc.metadata.get('title', 'No title')}\nContent: {doc.page_content[:300]}...\nSource: {doc.metadata.get('source', 'Unknown')}"
-                        for i, doc in enumerate(web_docs[:3])
+                        f"Result {i+1}:\nTitle: {doc.metadata.get('title', 'No title')}\nContent: {doc.page_content[:200]}...\nSource: {doc.metadata.get('source', 'Unknown')}"
+                        for i, doc in enumerate(web_docs)
                     ])
-                    content = f"Found {len(web_docs)} web results:\n\n{docs_content}"
+                    content = f"Found {len(web_docs)} relevant web result(s):\n\n{docs_content}"
                 else:
                     content = "No results found from web search."
                     
@@ -171,6 +205,10 @@ async def handle_tool_calls(state: State, config: RunnableConfig) -> dict:
             name=tool_name
         )
         messages_to_add.append(tool_message)
+    
+    # Limit total documents to prevent token overflow in subsequent calls
+    if len(retrieved_docs) > 5:
+        retrieved_docs = retrieved_docs[-5:]  # Keep only the 5 most recent documents
     
     return {"messages": messages_to_add, "retrieved_docs": retrieved_docs}
 
@@ -188,7 +226,7 @@ async def science_agent(
     if not state.retrieved_docs:
         retrieved_docs = f"No documents currently available for the question: '{user_question}'. You MUST use retrieve_documents tool immediately with a search query based on this question."
     else:
-        retrieved_docs = format_docs(state.retrieved_docs)
+        retrieved_docs = format_docs_safe(state.retrieved_docs)
     
     # Create a tool-enabled model
     model = load_chat_model(configuration.response_model).bind_tools(tools)
@@ -197,7 +235,8 @@ async def science_agent(
     
     message_value = await prompt.ainvoke({
         "retrieved_docs": retrieved_docs,
-        "question": user_question
+        "question": user_question,
+        "critique_feedback": state.critique_feedback or "None"
     }, config)
     
     response = await model.ainvoke(message_value, config)
@@ -223,7 +262,7 @@ async def history_agent(
     if not state.retrieved_docs:
         retrieved_docs = f"No documents currently available for the question: '{user_question}'. You MUST use retrieve_documents tool immediately with a search query based on this question."
     else:
-        retrieved_docs = format_docs(state.retrieved_docs)
+        retrieved_docs = format_docs_safe(state.retrieved_docs)
     
     # Create a tool-enabled model
     model = load_chat_model(configuration.response_model).bind_tools(tools)
@@ -232,7 +271,8 @@ async def history_agent(
     
     message_value = await prompt.ainvoke({
         "retrieved_docs": retrieved_docs,
-        "question": user_question
+        "question": user_question,
+        "critique_feedback": state.critique_feedback or "None"
     }, config)
     
     response = await model.ainvoke(message_value, config)
@@ -258,7 +298,7 @@ async def literature_agent(
     if not state.retrieved_docs:
         retrieved_docs = f"No documents currently available for the question: '{user_question}'. You MUST use retrieve_documents tool immediately with a search query based on this question."
     else:
-        retrieved_docs = format_docs(state.retrieved_docs)
+        retrieved_docs = format_docs_safe(state.retrieved_docs)
     
     # Create a tool-enabled model
     model = load_chat_model(configuration.response_model).bind_tools(tools)
@@ -267,7 +307,8 @@ async def literature_agent(
     
     message_value = await prompt.ainvoke({
         "retrieved_docs": retrieved_docs,
-        "question": user_question
+        "question": user_question,
+        "critique_feedback": state.critique_feedback or "None"
     }, config)
     
     response = await model.ainvoke(message_value, config)
@@ -293,7 +334,7 @@ async def general_agent(
     if not state.retrieved_docs:
         retrieved_docs = f"No documents currently available for the question: '{user_question}'. You MUST use retrieve_documents tool immediately with a search query based on this question."
     else:
-        retrieved_docs = format_docs(state.retrieved_docs)
+        retrieved_docs = format_docs_safe(state.retrieved_docs)
     
     # Create a tool-enabled model
     model = load_chat_model(configuration.response_model).bind_tools(tools)
@@ -302,7 +343,8 @@ async def general_agent(
     
     message_value = await prompt.ainvoke({
         "retrieved_docs": retrieved_docs,
-        "question": user_question
+        "question": user_question,
+        "critique_feedback": state.critique_feedback or "None"
     }, config)
     
     response = await model.ainvoke(message_value, config)
@@ -323,7 +365,7 @@ async def critique_agent(
     configuration = Configuration.from_runnable_config(config)
     
     user_question = get_original_user_question(state)
-    retrieved_docs = format_docs(state.retrieved_docs) if state.retrieved_docs else "No documents available."
+    retrieved_docs = format_docs_safe(state.retrieved_docs) if state.retrieved_docs else "No documents available."
     agent_response = state.agent_response or ""
     
     prompt = ChatPromptTemplate.from_template(prompts.CRITIQUE_SYSTEM_PROMPT)
@@ -338,7 +380,8 @@ async def critique_agent(
     critique = cast(CritiqueDecision, await model.ainvoke(message_value, config))
     
     return {
-        "critique_decision": critique.decision
+        "critique_decision": critique.decision,
+        "critique_feedback": critique.reasoning
     }
 
 

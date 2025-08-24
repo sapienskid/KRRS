@@ -149,3 +149,7 @@ class State(InputState):
     
     critique_decision: str | None = field(default=None)
     """Stores the decision from critique agent (respond/retry/improve_query)."""
+    
+    critique_feedback: str | None = field(default=None)
+    """Stores the feedback/reasoning from critique agent."""
+    

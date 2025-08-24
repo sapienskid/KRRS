@@ -7,6 +7,7 @@ The retrievers support filtering results by user_id to ensure data isolation bet
 """
 
 import os
+import asyncio
 from contextlib import contextmanager
 from typing import Generator
 
@@ -44,40 +45,96 @@ def make_text_encoder(model: str) -> Embeddings:
 ## Retriever constructors
 
 
-@contextmanager
-def make_elastic_retriever(
+async def _create_async_elastic_retriever(
     configuration: IndexConfiguration, embedding_model: Embeddings
-) -> Generator[VectorStoreRetriever, None, None]:
-    """Configure this agent to connect to a specific elastic index."""
-    from langchain_elasticsearch import ElasticsearchStore
+) -> VectorStoreRetriever:
+    """Internal async function to create Elasticsearch retriever."""
+    from langchain_elasticsearch import AsyncElasticsearchStore
+    from elasticsearch import AsyncElasticsearch
 
     connection_options = {}
     if configuration.retriever_provider == "elastic-local":
         connection_options = {
-            "es_user": os.environ["ELASTICSEARCH_USER"],
-            "es_password": os.environ["ELASTICSEARCH_PASSWORD"],
+            "basic_auth": (
+                os.environ["ELASTICSEARCH_USER"], 
+                os.environ["ELASTICSEARCH_PASSWORD"]
+            ),
         }
-
     else:
-        connection_options = {"es_api_key": os.environ["ELASTICSEARCH_API_KEY"]}
+        connection_options = {"api_key": os.environ["ELASTICSEARCH_API_KEY"]}
 
-    vstore = ElasticsearchStore(
-        **connection_options,  # type: ignore
-        es_url=os.environ["ELASTICSEARCH_URL"],
+    # Create async Elasticsearch client
+    es_client = AsyncElasticsearch(
+        hosts=[os.environ["ELASTICSEARCH_URL"]],
+        **connection_options
+    )
+
+    # Create AsyncElasticsearchStore
+    vstore = AsyncElasticsearchStore(
+        es_connection=es_client,
         index_name="langchain_index",
         embedding=embedding_model,
     )
 
-    search_kwargs = configuration.search_kwargs
+    search_kwargs = configuration.search_kwargs.copy()
 
+    # Add user_id filter for data isolation
     search_filter = search_kwargs.setdefault("filter", [])
     search_filter.append({"term": {"metadata.user_id": configuration.user_id}})
-    yield vstore.as_retriever(search_kwargs=search_kwargs)
+    
+    # Set default k to limit retrieved documents (default to 1 as specified)
+    if "k" not in search_kwargs:
+        search_kwargs["k"] = 1
+    
+    return vstore.as_retriever(search_kwargs=search_kwargs)
 
 
-
-
-
+@contextmanager
+def make_elastic_retriever(
+    configuration: IndexConfiguration, embedding_model: Embeddings
+) -> Generator[VectorStoreRetriever, None, None]:
+    """Configure this agent to connect to a specific elastic index using async operations."""
+    
+    # Run the async creation in a thread to avoid blocking
+    async def create_retriever():
+        return await _create_async_elastic_retriever(configuration, embedding_model)
+    
+    # Use asyncio.to_thread to run the async operation without blocking
+    try:
+        # Get or create event loop
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If we're already in an async context, we need to use a different approach
+            # This creates the retriever using the async method but wraps it for sync use
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, create_retriever())
+                retriever = future.result(timeout=30)
+        else:
+            retriever = loop.run_until_complete(create_retriever())
+    except RuntimeError:
+        # Fallback: create a new event loop
+        retriever = asyncio.run(create_retriever())
+    
+    try:
+        yield retriever
+    finally:
+        # Clean up the retriever's connection if it has one
+        if hasattr(retriever.vectorstore, 'client') and hasattr(retriever.vectorstore.client, 'close'):
+            try:
+                # Try to close the client properly
+                if asyncio.iscoroutinefunction(retriever.vectorstore.client.close):
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if not loop.is_closed():
+                            loop.run_until_complete(retriever.vectorstore.client.close())
+                    except RuntimeError:
+                        asyncio.run(retriever.vectorstore.client.close())
+                else:
+                    retriever.vectorstore.client.close()
+            except Exception:
+                # Ignore cleanup errors
+                pass
 
 
 @contextmanager
@@ -90,11 +147,11 @@ def make_retriever(
     user_id = configuration.user_id
     if not user_id:
         raise ValueError("Please provide a valid user_id in the configuration.")
+    
     match configuration.retriever_provider:
         case "elastic-local":
             with make_elastic_retriever(configuration, embedding_model) as retriever:
                 yield retriever
-
         case _:
             raise ValueError(
                 "Unrecognized retriever_provider in configuration. "

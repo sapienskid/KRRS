@@ -56,9 +56,10 @@ class IndexConfiguration:
     )
 
     search_kwargs: dict[str, Any] = field(
-        default_factory=dict,
+        default_factory=lambda: {"k": 1, "score_threshold": 0.7},
         metadata={
-            "description": "Additional keyword arguments to pass to the search function of the retriever."
+            "description": "Additional keyword arguments to pass to the search function of the retriever. "
+            "Default k=1 limits to one document, score_threshold=0.7 ensures only relevant documents are returned."
         },
     )
 
